@@ -7,7 +7,7 @@ import {
   hideLoadMoreButton,
 } from './js/render-functions.js';
 
-import { getImagesByQuery } from './js/pixabay-api';
+import { getImagesByQuery } from './js/pixabay-api.js';
 
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
@@ -37,9 +37,7 @@ form.addEventListener('submit', async e => {
     const data = await getImagesByQuery(query, page);
 
     if (data.hits.length === 0) {
-      iziToast.error({
-        message: 'Sorry, no images found.',
-      });
+      iziToast.error({ message: 'Sorry, no images found.' });
       return;
     }
 
@@ -47,7 +45,14 @@ form.addEventListener('submit', async e => {
     loadedImages += data.hits.length;
 
     createGallery(data.hits);
-    showLoadMoreButton();
+
+    if (loadedImages < totalHits) {
+      showLoadMoreButton();
+    } else {
+      iziToast.info({
+        message: "We're sorry, but you've reached the end of search results.",
+      });
+    }
   } catch (error) {
     iziToast.error({ message: 'Error loading images' });
   } finally {
@@ -57,6 +62,7 @@ form.addEventListener('submit', async e => {
 
 loadMoreBtn.addEventListener('click', async () => {
   page += 1;
+  hideLoadMoreButton();
   showLoader();
 
   try {
@@ -67,8 +73,9 @@ loadMoreBtn.addEventListener('click', async () => {
 
     smoothScroll();
 
-    if (loadedImages >= totalHits) {
-      hideLoadMoreButton();
+    if (loadedImages < totalHits) {
+      showLoadMoreButton();
+    } else {
       iziToast.info({
         message: "We're sorry, but you've reached the end of search results.",
       });
